@@ -42,7 +42,7 @@ struct FullscreenMealView: View {
                 GeometryReader { geometry in
                     HStack(spacing: 0) {
                         ForEach(Array(meals.enumerated()), id: \.element.id) { index, meal in
-                            mealCardView(meal: meal, index: index)
+                            mealCardView(meal: meal, index: index, screenHeight: geometry.size.height)
                                 .frame(width: geometry.size.width)
                         }
                     }
@@ -94,7 +94,7 @@ struct FullscreenMealView: View {
         .padding(.bottom, 20)
     }
 
-    private func mealCardView(meal: Meal, index: Int) -> some View {
+    private func mealCardView(meal: Meal, index: Int, screenHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
             ZStack {
                 if !isCardFlipped {
@@ -115,14 +115,14 @@ struct FullscreenMealView: View {
                         .opacity(isCardFlipped ? 1 : 0)
                 }
             }
-            .frame(height: UIScreen.main.bounds.height * 0.5)
+            .frame(height: screenHeight * 0.5)
             .onTapGesture {
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                     isCardFlipped.toggle()
                 }
             }
 
-            detailsSection(meal: meal)
+            detailsSection(meal: meal, screenHeight: screenHeight)
         }
         .padding(.horizontal, 24)
     }
@@ -240,7 +240,7 @@ struct FullscreenMealView: View {
         .buttonStyle(.plain)
     }
 
-    private func detailsSection(meal: Meal) -> some View {
+    private func detailsSection(meal: Meal, screenHeight: CGFloat) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Text(meal.name)
@@ -291,7 +291,7 @@ struct FullscreenMealView: View {
             }
             .padding(24)
         }
-        .frame(maxHeight: UIScreen.main.bounds.height * 0.5)
+        .frame(maxHeight: screenHeight * 0.5)
     }
 
     private var navigationDots: some View {

@@ -7,14 +7,14 @@
 
 import Foundation
 
-enum ItemSyncStatus: String, Codable {
+enum ItemSyncStatus: String, Codable, Sendable {
     case synced
     case pendingCreate
     case pendingUpdate
     case pendingDelete
 }
 
-struct Meal: Identifiable, Codable {
+struct Meal: Identifiable, Codable, Sendable {
     let id: UUID
     var name: String
     var cuisineType: String
@@ -59,7 +59,7 @@ struct Meal: Identifiable, Codable {
         self.syncStatus = syncStatus
     }
 
-    enum PrepTime: String, Codable, CaseIterable {
+    enum PrepTime: String, Codable, CaseIterable, Sendable {
         case short = "Short (15-30 min)"
         case medium = "Medium (30-60 min)"
         case long = "Long (1-2 hrs)"

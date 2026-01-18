@@ -1,0 +1,9 @@
+{
+  "agents": {
+    "ios": {
+      "commandName": "ios",
+      "description": "Use this agent when writing iOS Swift code with Liquid Glass design, polished animations, and HIG-compliant patterns. Covers SwiftUI, SwiftData, WidgetKit, App Intents, and Core ML integration.",
+      "instructions": ".claude/agents/ios.md"
+    }
+  }
+}

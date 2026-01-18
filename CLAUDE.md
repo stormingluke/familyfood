@@ -19,8 +19,8 @@ xcodebuild -project frindr.xcodeproj -scheme frindr -destination 'platform=iOS S
 
 ## Requirements
 
-- iOS 18.0+
-- Xcode 16.0+
+- iOS 26.0+
+- Xcode 26.0+
 - Swift 6.0+
 - Camera permissions required for meal capture
 
@@ -66,18 +66,24 @@ frindr/
 - `FullscreenMealView` - Full-screen meal carousel with card flip animations
 
 ### Design System
-The app uses iOS "Liquid Glass" glassmorphic design:
-- `GlassEffectContainer` groups elements with `.glassEffect()` modifier
+The app uses iOS 26 "Liquid Glass" design system:
+- `.glassEffect()` modifier - Native iOS 26 SwiftUI API for translucent glass appearance
+- `GlassEffectContainer` - Custom wrapper view for grouping glass elements with spacing
 - Dark gradient backgrounds (purple/blue)
 - Spring-based animations (response: 0.3-0.6s, damping: 0.7-0.8)
 - `FlowLayout` - Custom SwiftUI Layout for tag-style wrapping content
 
-### UIKit Integration
-- `ImagePicker` wraps `UIImagePickerController` via `UIViewControllerRepresentable` for camera access
+### Core Functionality
+- **Camera/ImagePicker** - Core meal capture functionality via `UIImagePickerController` wrapper
+  - Location: `Views/Camera/ImagePicker.swift`
+  - Fully implemented and production-ready
+  - Uses `UIViewControllerRepresentable` to wrap UIKit camera interface
 
 ## Backend API
 
 The app syncs with a Rust REST API for multi-device support across family members.
+
+**Base URL:** `https://familyfood-api.fly.dev`
 
 ### Technology Stack
 - Rust Edition 2024 with Axum web framework
@@ -87,7 +93,9 @@ The app syncs with a Rust REST API for multi-device support across family member
 - Deployed on fly.io
 
 ### Authentication
-Bearer token authentication via `Authorization` header. The token is embedded in the iOS app and validated by the API.
+Custom header authentication with two required headers:
+- `API_TOKEN` - API authentication token
+- `X-FAMILYFOOD-ID` - Family identifier for multi-family support
 
 ### API Endpoints
 
@@ -231,9 +239,10 @@ await POST /api/v1/meals/:id/eaten (body: { familyMemberIds: [uuid1, uuid2] })
 
 **Fetching all meals with pagination:**
 ```swift
-let url = URL(string: "\(baseURL)/api/v1/meals?limit=20&offset=0")!
+let url = URL(string: "https://familyfood-api.fly.dev/api/v1/meals?limit=20&offset=0")!
 var request = URLRequest(url: url)
-request.setValue("Bearer \(apiToken)", forHTTPHeaderField: "Authorization")
+request.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+request.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
 let (data, _) = try await URLSession.shared.data(for: request)
 let meals = try JSONDecoder().decode([Meal].self, from: data)
 ```
@@ -241,19 +250,21 @@ let meals = try JSONDecoder().decode([Meal].self, from: data)
 **Creating a meal with image:**
 ```swift
 // Step 1: Upload image
-let imageURL = URL(string: "\(baseURL)/api/v1/images/upload")!
+let imageURL = URL(string: "https://familyfood-api.fly.dev/api/v1/images/upload")!
 var imageRequest = URLRequest(url: imageURL)
 imageRequest.httpMethod = "POST"
-imageRequest.setValue("Bearer \(apiToken)", forHTTPHeaderField: "Authorization")
+imageRequest.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+imageRequest.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
 // Set multipart form data with image...
 let (imageData, _) = try await URLSession.shared.upload(for: imageRequest, from: formData)
 let uploadResponse = try JSONDecoder().decode(UploadResponse.self, from: imageData)
 
 // Step 2: Create meal with image URL
-let mealURL = URL(string: "\(baseURL)/api/v1/meals")!
+let mealURL = URL(string: "https://familyfood-api.fly.dev/api/v1/meals")!
 var mealRequest = URLRequest(url: mealURL)
 mealRequest.httpMethod = "POST"
-mealRequest.setValue("Bearer \(apiToken)", forHTTPHeaderField: "Authorization")
+mealRequest.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+mealRequest.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
 mealRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
 let createMeal = CreateMealRequest(
     name: "Pizza",
@@ -267,10 +278,11 @@ mealRequest.httpBody = try JSONEncoder().encode(createMeal)
 
 **Adding a meal to favorites:**
 ```swift
-let url = URL(string: "\(baseURL)/api/v1/family-members/\(memberId)/favorites/\(mealId)")!
+let url = URL(string: "https://familyfood-api.fly.dev/api/v1/family-members/\(memberId)/favorites/\(mealId)")!
 var request = URLRequest(url: url)
 request.httpMethod = "POST"
-request.setValue("Bearer \(apiToken)", forHTTPHeaderField: "Authorization")
+request.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+request.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
 let (data, _) = try await URLSession.shared.data(for: request)
 ```
 

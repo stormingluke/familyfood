@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FamilyMember: Identifiable, Codable {
+struct FamilyMember: Identifiable, Codable, Sendable {
     let id: UUID
     var name: String
     var role: String

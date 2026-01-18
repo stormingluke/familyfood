@@ -10,8 +10,9 @@ import Foundation
 actor APIClient {
     static let shared = APIClient()
 
-    private let baseURL = URL(string: "https://api.frindr.app")!
-    private let bearerToken = "your-api-token-here"  // TODO: Configure with actual token
+    private let baseURL = URL(string: "https://familyfood-api.fly.dev")!
+    private let apiToken = "2a00f60c-1212-4d7f-80f6-0c12122d7f5e"
+    private let familyFoodId = "caradine6406fbed-3951-49f9-86fb-ed395199f9e2"
 
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
@@ -39,7 +40,8 @@ actor APIClient {
     ) async throws -> T {
         var request = URLRequest(url: baseURL.appendingPathComponent(endpoint.path))
         request.httpMethod = method.rawValue
-        request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+        request.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
@@ -78,7 +80,8 @@ actor APIClient {
     ) async throws {
         var request = URLRequest(url: baseURL.appendingPathComponent(endpoint.path))
         request.httpMethod = method.rawValue
-        request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+        request.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let body = body {
@@ -113,7 +116,8 @@ actor APIClient {
         let boundary = UUID().uuidString
         var request = URLRequest(url: baseURL.appendingPathComponent("api/v1/images/upload"))
         request.httpMethod = "POST"
-        request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiToken, forHTTPHeaderField: "API_TOKEN")
+        request.setValue(familyFoodId, forHTTPHeaderField: "X-FAMILYFOOD-ID")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         var bodyData = Data()

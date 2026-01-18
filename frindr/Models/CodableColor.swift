@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CodableColor: Codable {
+struct CodableColor: Codable, Sendable {
     let red: Double
     let green: Double
     let blue: Double
