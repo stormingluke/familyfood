@@ -31,39 +31,62 @@ frindr/
 ├── frindrApp.swift              # App entry point
 ├── ContentView.swift            # Root container with tab navigation
 ├── Models/
-│   ├── Meal.swift               # Meal data model with PrepTime enum
+│   ├── Meal.swift               # Meal data model with PrepTime enum, sync status
 │   ├── FamilyMember.swift       # Family member profile model
-│   └── CodableColor.swift       # Color persistence wrapper
+│   ├── CodableColor.swift       # Color persistence wrapper
+│   └── DTOs/
+│       ├── MealDTO.swift        # API DTO with conversion methods
+│       └── FamilyMemberDTO.swift
+├── Services/
+│   ├── APIClient.swift          # HTTP client with auth headers (actor)
+│   ├── MealService.swift        # Meal CRUD with cache + API sync (@Observable)
+│   ├── FamilyMemberService.swift
+│   ├── ImageService.swift       # Image upload to R2
+│   ├── CacheManager.swift       # File-based JSON persistence (actor)
+│   └── SyncManager.swift        # Coordinates sync, offline queue (@Observable)
 └── Views/
     ├── Discover/
-    │   └── FullscreenMealView.swift   # Full-screen meal carousel
+    │   └── FullscreenMealView.swift
     ├── Family/
-    │   └── AddFamilyMemberSheet.swift # Add family member form
+    │   ├── AddFamilyMemberSheet.swift
+    │   └── FamilyMemberDetailSheet.swift
     ├── Camera/
-    │   ├── CameraCaptureView.swift    # Meal capture interface
-    │   └── ImagePicker.swift          # UIKit camera wrapper
+    │   ├── CameraCaptureView.swift
+    │   └── ImagePicker.swift
     └── Shared/
-        └── FlowLayout.swift           # Custom tag-style layout
+        ├── FlowLayout.swift
+        ├── GlassEffectContainer.swift
+        └── SyncStatusView.swift
 ```
 
 ## Architecture
 
-**Frindr** is a family meal tracking app built with SwiftUI using MVVM-style patterns.
+**Frindr** is a family meal tracking app built with SwiftUI using service-based architecture.
 
 ### Data Flow
-- State is managed at the `ContentView` level using `@State` properties for `meals` and `familyMembers`
-- Child views receive data via bindings (`@Binding`) or direct passing
-- No persistence layer yet - data is initialized with sample data on app launch via `loadSampleData()`
+- `@Observable` service classes (`MealService`, `FamilyMemberService`) hold app state
+- Services injected via `@Environment` into views
+- `SyncManager` coordinates between services and handles offline queue
+- `CacheManager` (actor) handles file-based JSON persistence
+- `APIClient` (actor) handles all HTTP requests with bearer token auth
 
 ### Key Models
-- `Meal` - Tracks meal name, cuisine type, prep time, photo data, when eaten, and which family members ate it (via UUIDs)
+- `Meal` - Tracks meal name, cuisine type, prep time, photo data/URL, when eaten, who ate it (via UUIDs), and `syncStatus` for offline support
 - `FamilyMember` - Profile with name, role, age, activities, preferences, and favorite meal IDs
-- `CodableColor` - Wrapper to make SwiftUI `Color` codable for persistence
+- `ItemSyncStatus` - Enum: `.synced`, `.pendingCreate`, `.pendingUpdate`, `.pendingDelete`
+- `PendingMutation` - Queued offline operations stored in `CacheManager`
+
+### Service Layer
+- **MealService/FamilyMemberService** - CRUD operations with optimistic local updates, background API sync, and offline queuing
+- **CacheManager** - File-based persistence at `Documents/cache/` for meals.json, familyMembers.json, pendingMutations.json, and images/
+- **SyncManager** - Processes pending mutations, merges remote data (remote wins on conflicts)
+- **ImageService** - Handles multipart image uploads to Cloudflare R2
 
 ### View Structure
 - `ContentView` - Root container managing tab navigation (Discover/Activity/Family) and modal presentations
 - Activity tab triggers the quick actions modal overlay rather than showing its own content
 - `FullscreenMealView` - Full-screen meal carousel with card flip animations
+- `SyncStatusView` - Shows sync status indicator (syncing/offline/error)
 
 ### Design System
 The app uses iOS 26 "Liquid Glass" design system:
